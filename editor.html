@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description"
+        content="Editor de listas do Bastos System. Adicione itens, valores e quantidades com praticidade, inclusive por voz.">
+
+    <title>Editor de Lista - BS</title>
+
+    <!-- Favicon e ícones -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="icons/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <!-- Manifesto -->
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f2f2f2;
+            padding: 20px;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            background: #fff;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        input[type="text"] {
+            width: 90%;
+            padding: 5px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        tfoot {
+            font-weight: bold;
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1 id="tituloLista">📝 Lista</h1>
+    <button onclick="voltar()">🔙 Voltar</button>
+    <button onclick="excluirLista()">🗑️ Excluir Esta Lista</button>
+    <button onclick="addItem()">➕ Adicionar Item</button>
+    <button onclick="saveLista()">💾 Salvar</button>
+    <button onclick="limparLista()">🧹 Limpar Lista</button>
+
+    <table id="tabela">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Valor R$</th>
+                <th>Qtd</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">TOTAL GERAL</td>
+                <td id="totalGeral">R$ 0.00</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <script>
+        let nomeLista = new URLSearchParams(location.search).get("lista") || "SemNome";
+        document.getElementById("tituloLista").textContent = `📝 ${nomeLista}`;
+        let contadorItens = 0;
+
+        function addItem(nome = "", valor = "", qtd = "") {
+            const tbody = document.querySelector("#tabela tbody");
+            const index = contadorItens++;
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>
+                <input type="text" id="item-${index}" value="${nome}" oninput="calcTotal(this)">
+                <button onclick="voz(this)">🎤</button>
+                </td>
+                <td>
+                <input type="text" id="valor-${index}" value="${valor}" oninput="calcTotal(this)">
+                <button onclick="voz(this)">🎤</button>
+                </td>
+                <td>
+                <input type="text" id="quant-${index}" value="${qtd}" oninput="calcTotal(this)">
+                <button onclick="voz(this)">🎤</button>
+                </td>
+                <td class="totalItem" id="valorTotal-${index}">R$ 0.00</td>
+            `;
+            tbody.appendChild(row);
+
+            // 🚀 Força cálculo após adicionar (usando qualquer input da linha)
+            calcTotal(row.querySelector("input"));
+        }
+
+        function parseReal(input) {
+            let texto = input.value || "";
+            texto = texto.replace(/\./g, "").replace(",", ".");
+            return parseFloat(texto) || 0;
+        }
+
+        function calcTotal(input) {
+            const row = input.closest("tr");
+            const valor = parseReal(row.cells[1].querySelector("input"));
+            const qtd = parseReal(row.cells[2].querySelector("input"));
+            const total = valor * qtd;
+            row.querySelector(".totalItem").textContent = "R$ " + total.toFixed(2);
+            calcTudo();
+        }
+
+        function calcTudo() {
+            let total = 0;
+            document.querySelectorAll("#tabela tbody tr").forEach(row => {
+                const valor = parseReal(row.cells[1].querySelector("input"));
+                const qtd = parseReal(row.cells[2].querySelector("input"));
+                total += valor * qtd;
+            });
+            document.getElementById("totalGeral").textContent = "R$ " + total.toFixed(2);
+        }
+
+        function voz(botao) {
+            if (!("webkitSpeechRecognition" in window)) {
+                alert("Seu navegador não suporta voz.");
+                return;
+            }
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "pt-BR";
+            const input = botao.previousElementSibling;
+            const idCampo = input.id;
+
+            recognition.onresult = function (event) {
+                let texto = event.results[0][0].transcript.toLowerCase();
+
+                if (idCampo.startsWith("valor-") || idCampo.startsWith("quant-")) {
+                    texto = texto
+                        .replace(/ e /g, ",")
+                        .replace(/:/g, ",")
+                        .replace(/ reais?/g, "")
+                        .replace(/[^\d,.-]/g, "")
+                        .trim();
+                }
+
+                input.value = texto;
+
+                // 🚀 Dispara o evento 'input' manualmente
+                input.dispatchEvent(new Event("input"));
+            };
+
+            recognition.start();
+        }
+
+        function saveLista() {
+            const dados = [];
+            document.querySelectorAll("#tabela tbody tr").forEach(row => {
+                const nome = row.cells[0].querySelector("input").value;
+                const valor = row.cells[1].querySelector("input").value;
+                const qtd = row.cells[2].querySelector("input").value;
+                const totalText = row.cells[3].textContent || "R$ 0.00";
+                dados.push({ nome, valor, qtd, total: totalText });
+            });
+            localStorage.setItem("bs_" + nomeLista, JSON.stringify(dados));
+            alert("Lista salva!");
+        }
+
+        function limparLista() {
+            if (confirm("Limpar todos os itens desta lista?")) {
+                document.querySelector("#tabela tbody").innerHTML = "";
+                calcTudo();
+            }
+        }
+
+        function excluirLista() {
+            if (!confirm("Tem certeza que deseja excluir esta lista inteira?")) return;
+            localStorage.removeItem("bs_" + nomeLista);
+            const listas = JSON.parse(localStorage.getItem("bsListas") || "[]");
+            const index = listas.indexOf(nomeLista);
+            if (index > -1) listas.splice(index, 1);
+            localStorage.setItem("bsListas", JSON.stringify(listas));
+            location.href = "index.html";
+        }
+
+        function voltar() {
+            location.href = "index.html";
+        }
+
+        function carregar() {
+            const dados = JSON.parse(localStorage.getItem("bs_" + nomeLista) || "[]");
+            dados.forEach(item => addItem(item.nome, item.valor, item.qtd));
+        }
+
+        carregar();
+    </script>
+
+</body>
+
+</html>

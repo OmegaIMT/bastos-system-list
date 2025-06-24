@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description"
+        content="App leve e prático para criar e organizar listas no estilo Bastos System, com suporte offline e instalação no celular.">
+    <title>Minhas Listas - BS</title>
+
+    <!-- Favicon e ícones para navegadores -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="icons/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="icons/favicon.ico" type="image/x-icon">
+
+    <!-- Apple e mobile -->
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <!-- Manifesto PWA -->
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f2f2f2;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #fff;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .actions button {
+            margin-left: 5px;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #ccc;
+            padding: 10px 0;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📝 Minhas Listas (BS)</h1>
+    <ul id="listas"></ul>
+
+    <footer>
+        <button onclick="novaLista()">➕ Nova Lista</button>
+    </footer>
+
+    <script>
+        function carregarListas() {
+            const listas = JSON.parse(localStorage.getItem("bsListas") || "[]");
+            const ul = document.getElementById("listas");
+            ul.innerHTML = "";
+            listas.forEach((nome, index) => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                <span>${nome}</span>
+                <div class="actions">
+                    <button onclick="abrir('${nome}')">Abrir</button>
+                    <button onclick="renomear(${index})">Renomear</button>
+                    <button onclick="excluir(${index})">Excluir</button>
+                </div>
+                `;
+                ul.appendChild(li);
+            });
+        }
+
+        function abrir(nome) {
+            location.href = `editor.html?lista=${encodeURIComponent(nome)}`;
+        }
+
+        function excluir(index) {
+            if (!confirm("Excluir esta lista?")) return;
+            const listas = JSON.parse(localStorage.getItem("bsListas") || "[]");
+            const nome = listas[index];
+            localStorage.removeItem("bs_" + nome);
+            listas.splice(index, 1);
+            localStorage.setItem("bsListas", JSON.stringify(listas));
+            carregarListas();
+        }
+
+        function renomear(index) {
+            const listas = JSON.parse(localStorage.getItem("bsListas") || "[]");
+            const nomeAntigo = listas[index];
+            const nomeNovo = prompt("Novo nome da lista:", nomeAntigo);
+            if (!nomeNovo || nomeNovo === nomeAntigo) return;
+            const dados = localStorage.getItem("bs_" + nomeAntigo);
+            localStorage.setItem("bs_" + nomeNovo, dados);
+            localStorage.removeItem("bs_" + nomeAntigo);
+            listas[index] = nomeNovo;
+            localStorage.setItem("bsListas", JSON.stringify(listas));
+            carregarListas();
+        }
+
+        function novaLista() {
+            const nome = prompt("Nome da nova lista:");
+            if (!nome) return;
+            const listas = JSON.parse(localStorage.getItem("bsListas") || "[]");
+            if (listas.includes(nome)) {
+                alert("Já existe uma lista com esse nome.");
+                return;
+            }
+            listas.push(nome);
+            localStorage.setItem("bsListas", JSON.stringify(listas));
+            localStorage.setItem("bs_" + nome, JSON.stringify([]));
+            location.href = `editor.html?lista=${encodeURIComponent(nome)}`;
+        }
+
+        window.addEventListener("load", carregarListas);
+    </script>
+</body>
+
+</html>
