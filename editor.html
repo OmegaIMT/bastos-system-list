@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta name="theme-color" content="#ffffff">
+    <base href="/bastos-system-list/">
     <meta name="description"
         content="Editor de listas do Bastos System. Adicione itens, valores e quantidades com praticidade, inclusive por voz.">
 
@@ -220,6 +221,13 @@
         }
 
         carregar();
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/bastos-system-list/service-worker.js")
+                .then(reg => console.log("✅ Service Worker registrado!", reg))
+                .catch(err => console.error("❌ Falha no registro do SW", err));
+        }
+
     </script>
 
 </body>
