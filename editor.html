@@ -159,21 +159,17 @@
             const input = botao.previousElementSibling;
             const idCampo = input.id;
 
-            recognition.onresult = function (event) {
-                let texto = event.results[0][0].transcript.toLowerCase();
+            rrecognition.onresult = function (event) {
+                let texto = event.results[0][0].transcript.toLowerCase().trim();
 
-                if (idCampo.startsWith("valor-") || idCampo.startsWith("quant-")) {
-                    texto = texto
-                        .replace(/ e /g, ",")
-                        .replace(/:/g, ",")
-                        .replace(/ reais?/g, "")
-                        .replace(/[^\d,.-]/g, "")
-                        .trim();
+                // Se for um número curto isolado, força o uso
+                if (/^\d{1,2}$/.test(texto)) {
+                    texto = texto;
+                } else if (texto.includes(" e ")) {
+                    texto = texto.split(" e ")[0]; // Pega só o primeiro número
                 }
 
                 input.value = texto;
-
-                // 🚀 Dispara o evento 'input' manualmente
                 input.dispatchEvent(new Event("input"));
             };
 
@@ -226,7 +222,6 @@
                 .then(reg => console.log("✅ SW registrado!", reg))
                 .catch(err => console.error("❌ Falha ao registrar SW", err));
         }
-
 
     </script>
 
