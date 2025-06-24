@@ -159,7 +159,7 @@
             const input = botao.previousElementSibling;
             const idCampo = input.id;
 
-            rrecognition.onresult = function (event) {
+            recognition.onresult = function (event) {
                 let texto = event.results[0][0].transcript.toLowerCase().trim();
 
                 // Se for um número curto isolado, força o uso
