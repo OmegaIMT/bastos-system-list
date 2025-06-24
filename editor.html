@@ -160,16 +160,20 @@
             const idCampo = input.id;
 
             recognition.onresult = function (event) {
-                let texto = event.results[0][0].transcript.toLowerCase().trim();
+                let texto = event.results[0][0].transcript.toLowerCase();
 
-                // Se for um número curto isolado, força o uso
-                if (/^\d{1,2}$/.test(texto)) {
-                    texto = texto;
-                } else if (texto.includes(" e ")) {
-                    texto = texto.split(" e ")[0]; // Pega só o primeiro número
+                if (idCampo.startsWith("valor-") || idCampo.startsWith("quant-")) {
+                    texto = texto
+                        .replace(/ e /g, ",")
+                        .replace(/:/g, ",")
+                        .replace(/ reais?/g, "")
+                        .replace(/[^\d,.-]/g, "")
+                        .trim();
                 }
 
                 input.value = texto;
+
+                // 🚀 Dispara o evento 'input' manualmente
                 input.dispatchEvent(new Event("input"));
             };
 
