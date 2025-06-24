@@ -29,4 +29,4 @@ Aplicativo web leve, funcional e feito com carinho para criar, editar e gerencia
 # via Python
 python -m http.server
 
-# ou com Live Server no VS Code
+# ou com Live Server no VS Code.
