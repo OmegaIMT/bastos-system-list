@@ -15,8 +15,6 @@
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
     <link rel="shortcut icon" href="icons/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="icons/favicon.ico" type="image/x-icon">
 
     <!-- Apple e mobile -->
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -145,8 +143,8 @@
 
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.register("/bastos-system-list/service-worker.js")
-                .then(reg => console.log("✅ Service Worker registrado!", reg))
-                .catch(err => console.error("❌ Falha no registro do SW", err));
+                .then(reg => console.log("✅ SW registrado!", reg))
+                .catch(err => console.error("❌ Falha ao registrar SW", err));
         }
 
     </script>
